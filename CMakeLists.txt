@@ -1,13 +1,14 @@
 # Replace 'foo' with your project's name
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.1)
 project(foo CXX)
 
 include(CheckCXXCompilerFlag)
 if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    option(ENABLE_ASAN "Enable address sanitizer." OFF)
+    option(ENABLE_SANITIZE "Enable ASAN and UBSAN sanitizers." OFF)
 endif()
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR
+   ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
     set(_option_text "Link against libc++ instead of libstdc++.")
     if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Darwin")
         option(ENABLE_LIBCXX ${_option_text} ON)
@@ -15,24 +16,28 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
         option(ENABLE_LIBCXX ${_option_text} OFF)
     endif()
 endif()
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    option(ENABLE_PROFILE "Generate extra code to write profile information." OFF)
+endif()
 
 set(SANITIZE_CXXFLAGS)
 set(SANITIZE_LDFLAGS)
-if(ENABLE_ASAN)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
-       "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if(ENABLE_SANITIZE)
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR
+       ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang" OR
+       ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         list(APPEND SANITIZE_CXXFLAGS
-            "-fsanitize=address -fno-omit-frame-pointer")
+            "-fsanitize=address,undefined -fno-omit-frame-pointer")
         list(APPEND SANITIZE_LDFLAGS
-            "-fsanitize=address")
+            "-fsanitize=address,undefined")
     else()
-        message(WARNING "Option ENABLE_ASAN only supported with clang and gcc.")
+        message(WARNING "Option ENABLE_SANITIZE only supported with clang and gcc.")
     endif()
 endif()
 
-set(GNUCXX_MINIMUM_VERSION "4.8")
-set(CLANGCXX_MINIMUM_VERSION "3.5")
-set(CXX_STANDARD_TAG "c++17")
+set(GNUCXX_MINIMUM_VERSION "7.0")
+set(CLANGCXX_MINIMUM_VERSION "5.0")
+set(CMAKE_CXX_STANDARD 17)
 
 # Helper macro. Add -O0 in Debug configuration to prevent any optimization.
 # Makes gdb users much happier.
@@ -42,18 +47,17 @@ macro(patch_cmake_cxx_debug_flags)
     endif()
 endmacro()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
     patch_cmake_cxx_debug_flags()
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANGCXX_MINIMUM_VERSION)
         message(FATAL_ERROR
             "Minimum required clang++ version: ${CLANGCXX_MINIMUM_VERSION}")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD_TAG}")
     if(ENABLE_LIBCXX)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fcolor-diagnostics")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     patch_cmake_cxx_debug_flags()
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS GNUCXX_MINIMUM_VERSION)
@@ -61,18 +65,28 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
             "Minimum required g++ version: ${GNUCXX_MINIMUM_VERSION}")
     endif()
 
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
-        set(CMAKE_CXX_FLAGS
-            "${CMAKE_CXX_FLAGS} -std=c++1y")
-    else()
-        set(CMAKE_CXX_FLAGS
-            "${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD_TAG}")
+    if(ENABLE_PROFILE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
-    endif()
+
+    # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+    string(CONCAT _gcc_extra_warnings
+        " -Wcast-align"
+        " -Wcast-qual"
+        " -Wdisabled-optimization"
+        " -Wdouble-promotion"
+        " -Wduplicated-branches"
+        " -Wduplicated-cond"
+        " -Wformat=2"
+        " -Wlogical-op"
+        " -Wmissing-include-dirs"
+        " -Wnull-dereference"
+        " -Wold-style-cast"
+        " -Wredundant-decls"
+        " -Wrestrict"
+        " -Wshadow")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_gcc_extra_warnings}")
 
     # Use colorized output on terminal if supported (GCC 4.9 onwards)
     CHECK_CXX_COMPILER_FLAG("-fdiagnostics-color=auto" GCC_HAS_COLOR)
@@ -104,17 +118,25 @@ else()
         "Could not determine compiler ID: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
+# Un-comment to print out compiler settings for different configuration types
+#message(STATUS "Debug: ${CMAKE_CXX_FLAGS_DEBUG}")
+#message(STATUS "Release: ${CMAKE_CXX_FLAGS_RELEASE}")
+#message(STATUS "RelWithDebInfo: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+#message(STATUS "MinSizeRel: ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+
 set(foo_SOURCES main.cpp)
 set(foo_HEADERS foo.hpp)
 
-set(GTEST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/gtest/googletest)
-set(GTEST_INCLUDE_DIR ${GTEST_ROOT}/include)
-set(GTEST_LIBRARIES gtest gtest_main)
-add_subdirectory(${GTEST_ROOT})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${GTEST_INCLUDE_DIR})
-
 # Feature test macros
 include(CheckCXXSourceCompiles)
+
+CHECK_CXX_SOURCE_COMPILES("
+#include <optional>
+int main() { std::optional<int> a; }
+" HAS_OPTIONAL)
+if(HAS_OPTIONAL)
+    add_definitions(-DHAS_OPTIONAL)
+endif()
 
 # Test support for noexcept specifier - negative: VS 2013
 CHECK_CXX_SOURCE_COMPILES("
@@ -128,10 +150,25 @@ endif()
 # N3656 - negative: libstdc++ prior 4.9.0
 CHECK_CXX_SOURCE_COMPILES("
 #include <memory>
-int main() { std::unique_ptr<int> ptr = std::make_unique<int>(4); }
+int main() { std::unique_ptr<int> ptr = std::make_unique<int>(1); }
 " HAS_MAKE_UNIQUE)
 if(HAS_MAKE_UNIQUE)
     add_definitions(-DHAS_MAKE_UNIQUE)
+endif()
+
+# Type alias declarations
+# http://en.cppreference.com/w/cpp/language/type_alias
+# negative: VS 2012
+CHECK_CXX_SOURCE_COMPILES("
+#include <ios>
+using flags = std::ios_base::fmtflags;
+flags f = std::ios_base::dec;
+template <typename T> using ptr = T*;
+ptr<int> x;
+int main() { }
+" HAS_TYPE_ALIAS)
+if(HAS_TYPE_ALIAS)
+    add_definitions(-DHAS_TYPE_ALIAS)
 endif()
 
 # Default template arguments for function templates - negative: VS 2012
@@ -184,8 +221,8 @@ endif()
 CHECK_CXX_SOURCE_COMPILES("
 #include <algorithm>
 #include <cstring>
-static const char source[] = \"boo\";
-static const char dest[] = \"bar\";
+static const char source[] = \"bar\";
+static const char dest[] = \"baz\";
 int main() { std::equal(source, source + std::strlen(source),
                         dest, dest + std::strlen(dest)); }
 " HAS_ROBUST_NONMODIFYING_SEQ_OPS)
@@ -208,6 +245,16 @@ set_target_properties(foo PROPERTIES
     COMPILE_FLAGS "${SANITIZE_CXXFLAGS}"
     LINK_FLAGS "${SANITIZE_LDFLAGS}")
 
+set(GTEST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/gtest/googletest)
+set(GTEST_INCLUDE_DIR ${GTEST_ROOT}/include)
+set(GTEST_LIBRARIES gtest gtest_main)
+if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
+    set(gtest_force_shared_crt ON CACHE BOOL
+        "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
+endif()
+add_subdirectory(${GTEST_ROOT} EXCLUDE_FROM_ALL)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${GTEST_INCLUDE_DIR})
 add_executable(tests tests/test_foo.cpp)
 target_link_libraries(tests ${GTEST_LIBRARIES})
 set_target_properties(tests PROPERTIES

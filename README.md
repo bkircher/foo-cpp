@@ -27,7 +27,7 @@ enabled like this
 ```bash
 mkdir build-dir
 cd build-dir/
-cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON /path/to/source
+cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZE=ON /path/to/source
 make
 ```
 
