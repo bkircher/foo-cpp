@@ -96,8 +96,8 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     message(WARNING "Intel C++ not supported.")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)
-        message(FATAL_ERROR "Visual Studio must be at least 2012")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0)
+        message(FATAL_ERROR "Visual Studio must be at least 2017")
     endif()
 
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -108,11 +108,6 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     endif()
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} /D_SCL_SECURE_NO_WARNINGS /DNOMINMAX")
-
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18.0)
-        # Make Google Test compile with Visual Studio 2012
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_VARIADIC_MAX=10")
-    endif()
 else()
     message(AUTHOR_WARNING
         "Could not determine compiler ID: ${CMAKE_CXX_COMPILER_ID}")
@@ -130,6 +125,7 @@ set(foo_HEADERS foo.hpp)
 # Feature test macros
 include(CheckCXXSourceCompiles)
 
+# Fails for VS2017
 CHECK_CXX_SOURCE_COMPILES("
 #include <optional>
 int main() { std::optional<int> a; }
@@ -138,7 +134,6 @@ if(HAS_OPTIONAL)
     add_definitions(-DHAS_OPTIONAL)
 endif()
 
-# Test support for noexcept specifier - negative: VS 2013
 CHECK_CXX_SOURCE_COMPILES("
 void func() noexcept { }
 int main() { }
@@ -147,7 +142,6 @@ if(HAS_NOEXCEPT_SPECIFIER)
     add_definitions(-DHAS_NOEXCEPT_SPECIFIER)
 endif()
 
-# N3656 - negative: libstdc++ prior 4.9.0
 CHECK_CXX_SOURCE_COMPILES("
 #include <memory>
 int main() { std::unique_ptr<int> ptr = std::make_unique<int>(1); }
@@ -156,9 +150,6 @@ if(HAS_MAKE_UNIQUE)
     add_definitions(-DHAS_MAKE_UNIQUE)
 endif()
 
-# Type alias declarations
-# http://en.cppreference.com/w/cpp/language/type_alias
-# negative: VS 2012
 CHECK_CXX_SOURCE_COMPILES("
 #include <ios>
 using flags = std::ios_base::fmtflags;
@@ -171,7 +162,6 @@ if(HAS_TYPE_ALIAS)
     add_definitions(-DHAS_TYPE_ALIAS)
 endif()
 
-# Default template arguments for function templates - negative: VS 2012
 CHECK_CXX_SOURCE_COMPILES("
 template <typename Fu = int> void func() { }
 int main() { }
@@ -180,7 +170,6 @@ if(HAS_DEFAULT_TEMPLATE_ARGS_FOR_FUNCTIONS)
     add_definitions(-DHAS_DEFAULT_TEMPLATE_ARGS_FOR_FUNCTIONS)
 endif()
 
-# Thread local storage - partial: VS 2012
 CHECK_CXX_SOURCE_COMPILES("
 int main() { thread_local int i; }
 " HAS_THREAD_LOCAL_STORAGE)
@@ -188,7 +177,6 @@ if(HAS_THREAD_LOCAL_STORAGE)
     add_definitions(-DHAS_THREAD_LOCAL_STORAGE)
 endif()
 
-# N2326 defaulted and deleted functions - negative: VS 2012 of course
 CHECK_CXX_SOURCE_COMPILES("
 struct Fu { Fu() = default; Fu(const Fu&) = delete; };
 int main() { }
@@ -197,7 +185,6 @@ if(HAS_DEFAULT_AND_DELETE)
     add_definitions(-DHAS_DEFAULT_AND_DELETE)
 endif()
 
-# Variadic templates - negative: VS 2012
 CHECK_CXX_SOURCE_COMPILES("
 template <typename... T> void func(T...) { }
 int main() { }
@@ -206,7 +193,6 @@ if(HAS_VARIADIC_TEMPLATES)
     add_definitions(-DHAS_VARIADIC_TEMPLATES)
 endif()
 
-# Non-buggy <type_traits> implementation - negative VS 2013
 CHECK_CXX_SOURCE_COMPILES("
 #include <type_traits>
 struct Fu { Fu(const Fu&) = delete; };
@@ -217,7 +203,6 @@ if(HAS_NON_BUGGY_TYPE_TRAITS)
     add_definitions(-DHAS_NON_BUGGY_TYPE_TRAITS)
 endif()
 
-# N3671 - negative: _MSC_VER <= 1800, libstdc++ prior 4.9.0
 CHECK_CXX_SOURCE_COMPILES("
 #include <algorithm>
 #include <cstring>
@@ -230,7 +215,6 @@ if(HAS_ROBUST_NONMODIFYING_SEQ_OPS)
     add_definitions(-DHAS_ROBUST_NONMODIFYING_SEQ_OPS)
 endif()
 
-# Test support for initializer lists - negative: VS 2012
 CHECK_CXX_SOURCE_COMPILES("
 #include <vector>
 int main() { std::vector<int> vec{1, 2, 3, 4, 5}; }
