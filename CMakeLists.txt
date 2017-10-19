@@ -28,6 +28,7 @@ endif()
 
 set(GNUCXX_MINIMUM_VERSION "7.0")
 set(CLANGCXX_MINIMUM_VERSION "5.0")
+set(MSVC_MINIMUM_VERSION "19.0") # VS2017
 set(CMAKE_CXX_STANDARD 17)
 
 # Helper macro. Add -O0 in Debug configuration to prevent any optimization.
@@ -84,7 +85,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     message(WARNING "Intel C++ not supported.")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS MSVC_MINIMUM_VERSION)
         message(FATAL_ERROR "Visual Studio must be at least 2017")
     endif()
 
