@@ -125,7 +125,7 @@ set(foo_HEADERS foo.hpp)
 # Feature test macros
 include(CheckCXXSourceCompiles)
 
-# Fails for VS2017
+# Fails for VS2017 and for libstdc++ 20170915
 CHECK_CXX_SOURCE_COMPILES("
 #include <optional>
 int main() { std::optional<int> a; }
