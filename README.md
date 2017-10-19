@@ -1,41 +1,28 @@
 # README
-
-foo-cpp is a CMake, Google Test Framework, C++14 project template that allows
-you to get going quickly.
+foo-cpp is a CMake, Google Test, C++17 project template that allows you to get
+going quickly. Basically cargo(1) for the poor.
 
 Just clone the repo as shown below and replace `foo` with your project's name
 and start coding.
 
-
 ## Supported Compilers
+Should work with the following compilers
 
-* Visual Studio 2013
-* Visual Studio 2015
-* Clang 3.5 with libc++
-* GCC 4.8 with libstdc++
-
-
-## Supported Operating Systems
-
-* Microsoft Windows 10
-* Mac OS X 10.11
-* RHEL 7
-* Ubuntu 14.04 LTS and 16.04 LTS
-
+* Visual Studio 2017
+* Clang 5 with and without libc++
+* GCC 7 with libstdc++
 
 ## Source Code
-
-foo-cpp's source code is available as a Git repository. To obtain it, type:
+Create a shallow clone of this repository with a history truncated to only the
+last revision.
 
 ```bash
-git clone --recursive https://github.com/bkircher/foo-cpp.git
+git clone --recursive --depth=1 https://github.com/bkircher/foo-cpp.git
 ```
 
-
 ## Building
-
-To build the accompanied tests with debugging symbols and Address Sanitizer
-enabled do something like this
+Build the accompanied tests with debugging symbols and Address Sanitizer
+enabled like this
 
 ```bash
 mkdir build-dir
@@ -51,6 +38,8 @@ Once you've build the project, you can run the tests with
 ```bash
 ./tests
 ```
+
+Happy hacking!
 
 <!-- vim: et sw=4 ts=4:
 -->
