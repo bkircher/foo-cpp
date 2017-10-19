@@ -1,8 +1,13 @@
 #pragma once
 
-namespace foo
-{
-    inline int multiply(int a, int b) { return a * b; }
-}
+#include <algorithm>
+#include <string>
 
-// vim:et ts=4 sw=4 noic cc=80
+namespace foo {
+inline int multiply(int a, int b) { return a * b; }
+
+inline std::string uppercase(std::string str) {
+  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+  return str;
+}
+}
