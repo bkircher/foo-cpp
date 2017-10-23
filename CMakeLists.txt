@@ -212,18 +212,8 @@ set_target_properties(foo PROPERTIES
     COMPILE_FLAGS "${SANITIZE_CXXFLAGS}"
     LINK_FLAGS "${SANITIZE_LDFLAGS}")
 
-set(GTEST_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/gtest/googletest)
-set(GTEST_INCLUDE_DIR ${GTEST_ROOT}/include)
-set(GTEST_LIBRARIES gtest gtest_main)
-if(${CMAKE_HOST_SYSTEM_NAME} STREQUAL "Windows")
-    set(gtest_force_shared_crt ON CACHE BOOL
-        "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
-endif()
-add_subdirectory(${GTEST_ROOT} EXCLUDE_FROM_ALL)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${GTEST_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(tests tests/test_foo.cpp)
-target_link_libraries(tests ${GTEST_LIBRARIES})
 set_target_properties(tests PROPERTIES
     LINKER_LANGUAGE CXX
     COMPILE_FLAGS "${SANITIZE_CXXFLAGS}"
