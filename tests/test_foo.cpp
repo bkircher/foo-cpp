@@ -2,28 +2,25 @@
 #include <tuple>
 #include <vector>
 
-#include <gtest/gtest.h>
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 
 #include "foo.hpp"
 
-using namespace testing;
+TEST_CASE("Multiplication works", "[multiply]") { REQUIRE(foo::multiply(2, 11) == 22); }
 
-class FooTest : public TestWithParam<std::tuple<std::string, std::string>> {
-protected:
-  virtual void SetUp() { std::tie(first, second) = GetParam(); }
+TEST_CASE("uppercase converts entire strings", "[uppercase]") {
+  const auto test_values = std::vector<std::tuple<std::string, std::string>>{
+      {"a", "A"}, {"c", "C"}, {"e", "E"},
+  };
 
-  virtual void TearDown() {}
+  SECTION("most common values") {
+    std::string first;
+    std::string second;
 
-  std::string first;
-  std::string second;
-};
-
-TEST(FooTest, MultiplySomething) { EXPECT_EQ(22, foo::multiply(2, 11)); }
-
-TEST_P(FooTest, UppercaseSomething) { EXPECT_STREQ(foo::uppercase(first).c_str(), second.c_str()); }
-
-static auto test_values = std::vector<std::tuple<std::string, std::string>>{
-    {"a", "A"}, {"c", "C"}, {"e", "E"},
-};
-
-INSTANTIATE_TEST_CASE_P(MeaningfulTestParameters, FooTest, ValuesIn(test_values));
+    for (const auto& val : test_values) {
+      std::tie(first, second) = val;
+      REQUIRE(foo::uppercase(first) == second);
+    }
+  }
+}
