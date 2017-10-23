@@ -3,7 +3,7 @@
 #include <vector>
 
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include "catch-wrapper.hpp"
 
 #include "foo.hpp"
 
