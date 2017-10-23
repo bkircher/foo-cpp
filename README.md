@@ -34,6 +34,13 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZE=ON /path/to/source
 make
 ```
 
+On macOS, specify a cache file with `-C` to let CMake know where to find your
+vanilla clang compiler
+
+```bash
+cmake -C /path/to/source/macos-brewed-clang.txt /path/to/source
+```
+
 Type `make help` to see more configuration options.
 
 Once you've build the project, you can run the tests with
