@@ -3,7 +3,11 @@
 cmake_minimum_required(VERSION 3.1)
 project(foo CXX)
 
-include(CheckCXXCompilerFlag)
+set(GNUCXX_MINIMUM_VERSION "7.0")
+set(CLANGCXX_MINIMUM_VERSION "5.0")
+set(MSVC_MINIMUM_VERSION "19.0")
+set(CXX_STANDARD_TAG "c++17")
+
 if(NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     option(ENABLE_SANITIZE "Enable ASAN and UBSAN sanitizers." OFF)
 endif()
@@ -26,11 +30,6 @@ if(ENABLE_SANITIZE)
     endif()
 endif()
 
-set(GNUCXX_MINIMUM_VERSION "7.0")
-set(CLANGCXX_MINIMUM_VERSION "5.0")
-set(MSVC_MINIMUM_VERSION "19.0") # VS2017
-set(CMAKE_CXX_STANDARD 17)
-
 # Helper macro. Add -O0 in Debug configuration to prevent any optimization.
 # Makes gdb users much happier.
 macro(patch_cmake_cxx_debug_flags)
@@ -39,13 +38,15 @@ macro(patch_cmake_cxx_debug_flags)
     endif()
 endmacro()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR
+   ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
     patch_cmake_cxx_debug_flags()
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANGCXX_MINIMUM_VERSION)
         message(FATAL_ERROR
             "Minimum required clang++ version: ${CLANGCXX_MINIMUM_VERSION}")
     endif()
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD_TAG}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fcolor-diagnostics")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     patch_cmake_cxx_debug_flags()
@@ -53,6 +54,8 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         message(FATAL_ERROR
             "Minimum required g++ version: ${GNUCXX_MINIMUM_VERSION}")
     endif()
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CXX_STANDARD_TAG} -fdiagnostics-color=auto")
 
     if(ENABLE_PROFILE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -76,19 +79,12 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
         " -Wrestrict"
         " -Wshadow")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_gcc_extra_warnings}")
-
-    # Use colorized output on terminal if supported (GCC 4.9 onwards)
-    CHECK_CXX_COMPILER_FLAG("-fdiagnostics-color=auto" GCC_HAS_COLOR)
-    if("${GCC_HAS_COLOR}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
-    endif()
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    message(WARNING "Intel C++ not supported.")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS MSVC_MINIMUM_VERSION)
         message(FATAL_ERROR "Visual Studio must be at least 2017")
     endif()
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CXX_STANDARD_TAG}")
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS
             "${CMAKE_CXX_FLAGS}")
@@ -99,7 +95,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
         "${CMAKE_CXX_FLAGS} /D_SCL_SECURE_NO_WARNINGS /DNOMINMAX")
 else()
     message(AUTHOR_WARNING
-        "Could not determine compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+        "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 # Un-comment to print out compiler settings for different configuration types
@@ -112,9 +108,9 @@ set(foo_SOURCES main.cpp)
 set(foo_HEADERS foo.hpp)
 
 # Feature test macros
+set(CMAKE_REQUIRED_FLAGS ${CMAKE_CXX_FLAGS})
 include(CheckCXXSourceCompiles)
 
-# Fails for VS2017 and for libstdc++ 20170915
 CHECK_CXX_SOURCE_COMPILES("
 #include <optional>
 int main() { std::optional<int> a; }
