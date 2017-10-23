@@ -1,6 +1,6 @@
 # README
-foo-cpp is a CMake, Google Test, C++17 project template that allows you to get
-going quickly. Basically cargo(1) for the poor.
+foo-cpp is a CMake, Catch test framework, C++17 project template that allows
+you to get going quickly. Basically cargo(1) for the poor.
 
 Just clone the repo as shown below and replace `foo` with your project's name
 and start coding.
@@ -20,7 +20,7 @@ Create a shallow clone of this repository with a history truncated to only the
 last revision.
 
 ```bash
-git clone --recursive --depth=1 https://github.com/bkircher/foo-cpp.git
+git clone --depth=1 https://github.com/bkircher/foo-cpp.git
 ```
 
 ## Building
