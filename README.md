@@ -9,8 +9,11 @@ and start coding.
 Should work with the following compilers
 
 * Visual Studio 2017
-* Clang 5 with and without libc++
+* Clang 5.0 with libc++
 * GCC 7 with libstdc++
+
+Note macOS users: only clang++ installed via Homebrew package manager is known
+to work. AppleClang is currently not supported.
 
 ## Source Code
 Create a shallow clone of this repository with a history truncated to only the

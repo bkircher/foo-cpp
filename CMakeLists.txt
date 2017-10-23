@@ -38,8 +38,7 @@ macro(patch_cmake_cxx_debug_flags)
     endif()
 endmacro()
 
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" OR
-   ${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     patch_cmake_cxx_debug_flags()
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANGCXX_MINIMUM_VERSION)
         message(FATAL_ERROR
@@ -94,8 +93,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} /D_SCL_SECURE_NO_WARNINGS /DNOMINMAX")
 else()
-    message(AUTHOR_WARNING
-        "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
+    message(AUTHOR_WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 # Un-comment to print out compiler settings for different configuration types
