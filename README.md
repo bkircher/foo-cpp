@@ -6,14 +6,14 @@ Just clone the repo as shown below and replace `foo` with your project's name
 and start coding.
 
 ## Supported Compilers
-Should work with the following compilers
+Should work with the latest compilers, starting with
 
 * Visual Studio 2017
 * Clang 5.0 with libc++
 * GCC 7 with libstdc++
 
-Note macOS users: only clang++ installed via Homebrew package manager is known
-to work. AppleClang is currently not supported.
+Note macOS users: only Clang installed via Homebrew package manager is known to
+work. AppleClang is currently not supported.
 
 ## Step-by-step
 Create a shallow clone of this repository with a history truncated to only the
@@ -24,14 +24,16 @@ Suppose you want to name your project _bar_, do
 ```bash
 git clone --depth=1 https://github.com/bkircher/foo-cpp.git bar
 cd bar/
-sed -i.bak 's/foo/bar/' *.txt tests/*.cpp *.?pp
+sed -i.bak 's/foo/bar/g' *.txt tests/*.cpp *.?pp
+git mv tests/test_foo.cpp tests/test_bar.cpp
+git mv foo.hpp bar.hpp
+git clean -dxf
 ```
 
 And your done.
 
 ## Building
-Build the accompanied tests with debugging symbols and Address Sanitizer
-enabled like this
+Build everything with debugging symbols and Address Sanitizer enabled like this
 
 ```bash
 mkdir build-dir
@@ -41,7 +43,7 @@ make
 ```
 
 On macOS, specify a cache file with `-C` to let CMake know where to find your
-vanilla clang compiler
+vanilla Clang compiler
 
 ```bash
 cmake -C /path/to/source/macos-brewed-clang.txt /path/to/source
