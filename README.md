@@ -15,13 +15,19 @@ Should work with the following compilers
 Note macOS users: only clang++ installed via Homebrew package manager is known
 to work. AppleClang is currently not supported.
 
-## Source Code
+## Step-by-step
 Create a shallow clone of this repository with a history truncated to only the
 last revision.
 
+Suppose you want to name your project _bar_, do
+
 ```bash
-git clone --depth=1 https://github.com/bkircher/foo-cpp.git
+git clone --depth=1 https://github.com/bkircher/foo-cpp.git bar
+cd bar/
+sed -i.bak 's/foo/bar/' *.txt tests/*.cpp *.?pp
 ```
+
+And your done.
 
 ## Building
 Build the accompanied tests with debugging symbols and Address Sanitizer
