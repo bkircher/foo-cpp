@@ -1,4 +1,6 @@
-# README
+[![Build Status](https://travis-ci.org/bkircher/foo-cpp.svg?branch=master)](https://travis-ci.org/bkircher/foo-cpp)
+
+# foo-cpp
 foo-cpp is a CMake, Catch test framework, C++17 project template that allows
 you to get going quickly. Basically cargo(1) for the poor.
 
