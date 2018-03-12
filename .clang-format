@@ -1,5 +1,7 @@
 ---
 ColumnLimit: '100'
+IncludeBlocks:   Regroup
+IndentPPDirectives: AfterHash
 PointerAlignment: Left
 
 ...
