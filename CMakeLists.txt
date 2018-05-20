@@ -30,8 +30,9 @@ if(ENABLE_SANITIZE)
   endif()
 endif()
 
-# Helper macro. Add -O0 in Debug configuration to prevent any optimization.
-# Makes gdb users much happier.
+# Add -O0 _only_ in Debug configuration to prevent any optimization. This
+# improves debugging experience (with gdb at least) but also eliminates any
+# hardening. So make sure those binaries aren't shipped.
 macro(patch_cmake_cxx_debug_flags)
   if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS_DEBUG "-O0 ${CMAKE_CXX_FLAGS_DEBUG}")
