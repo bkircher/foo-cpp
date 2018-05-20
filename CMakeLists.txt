@@ -112,7 +112,9 @@ set_target_properties(foo PROPERTIES
   COMPILE_FLAGS "${SANITIZE_CXXFLAGS}"
   LINK_FLAGS "${SANITIZE_LDFLAGS}")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 add_executable(tests tests/test_foo.cpp)
 set_target_properties(tests PROPERTIES
   LINKER_LANGUAGE CXX

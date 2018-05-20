@@ -3,7 +3,8 @@
 #include <vector>
 
 #define CATCH_CONFIG_MAIN
-#include "catch-wrapper.hpp"
+#include <catch2/catch.hpp>
+
 #include "foo.hpp"
 
 TEST_CASE("Multiplication works", "[multiply]") { REQUIRE(foo::multiply(2, 11) == 22); }
